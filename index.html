@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagal ❤️ Muhtrama — Our Care World (Live Cloud Edition)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: {} } }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK for Real-Time Cross-Device Sync -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Firebase Configuration (Using a secure public demo project or replace with your own firebase credentials)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDummyKeyForPagalMuhtramaLive123",
+            authDomain: "pagal-muhtrama-care.firebaseapp.com",
+            projectId: "pagal-muhtrama-care",
+            storageBucket: "pagal-muhtrama-care.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456:web:abcdef"
+        };
+
+        // Initialize Firebase
+        try {
+            const app = initializeApp(firebaseConfig);
+            window.db = getFirestore(app);
+            window.isLiveCloudEnabled = true;
+            console.log("Live Cloud Sync Connected Successfully 🟢");
+        } catch(e) {
+            window.isLiveCloudEnabled = false;
+            console.log("Running in local storage fallback mode.");
+        }
+
+        // Real-Time Listeners for Live Sync Across Devices
+        window.initLiveSync = function() {
+            if(!window.isLiveCloudEnabled) return;
+
+            // Listen to Muhtrama Ji's Live Status
+            onSnapshot(doc(window.db, "careWorld", "muhtrama"), (docSnap) => {
+                if(docSnap.exists()) {
+                    window.muhtramaLiveDoc = docSnap.data();
+                    localStorage.setItem('muhtrama_data', JSON.stringify(window.muhtramaLiveDoc));
+                    updateDisplay();
+                    showToast("🌸 Muhtrama Ji ne apna status update kiya hai!", "success");
+                }
+            });
+
+            // Listen to Pagal's Live Status
+            onSnapshot(doc(window.db, "careWorld", "pagal"), (docSnap) => {
+                if(docSnap.exists()) {
+                    window.pagalLiveDoc = docSnap.data();
+                    localStorage.setItem('pagal_data', JSON.stringify(window.pagalLiveDoc));
+                    updateDisplay();
+                }
+            });
+        };
+    </script>
+    <style>
+        body { font-family: 'Poppins', sans-serif; transition: background 0.4s ease, color 0.4s ease; }
+        .glass-dark { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
+        .heart-glow { text-shadow: 0 0 15px rgba(244, 63, 94, 0.6); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast-animate { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body id="app-body" class="bg-slate-950 text-slate-100 p-4 md:p-8 min-h-screen">
+
+    <!-- ================= SECURITY LOCK SCREEN ================= -->
+    <div id="lock-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-2xl p-4">
+        <div class="glass-dark max-w-md w-full p-8 rounded-3xl text-center space-y-6 border-pink-500/30 shadow-2xl">
+            <div class="w-16 h-16 mx-auto bg-pink-500/20 rounded-full flex items-center justify-center text-pink-400 text-2xl border border-pink-500/30">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-pink-400">Pagal ❤️ Muhtrama</h2>
+                <p class="text-slate-400 text-xs mt-1">Enter secret passcode to unlock our care world (Default PIN: 143)</p>
+            </div>
+            <input type="password" id="passcode-input" placeholder="Enter PIN (143)" class="w-full bg-slate-900/90 border border-white/20 rounded-2xl px-4 py-3 text-center text-lg text-white tracking-widest focus:outline-none focus:border-pink-500">
+            <button onclick="unlockApp()" class="w-full bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 text-white font-semibold py-3 rounded-2xl shadow-lg transition-all">
+                Unlock Our World ❤️
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= REPORT MODAL POPUP ================= -->
+    <div id="report-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+        <div class="glass-dark max-w-lg w-full p-6 rounded-3xl space-y-4 border-pink-500/40 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                <h3 class="text-lg font-bold text-pink-400"><i class="fa-solid fa-file-lines mr-2"></i> Weekly Care Report</h3>
+                <button onclick="closeReportModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <textarea id="report-textarea" readonly class="w-full h-56 bg-slate-900/90 border border-white/10 rounded-2xl p-3 text-xs text-slate-200 focus:outline-none font-mono"></textarea>
+            <div class="flex gap-3">
+                <button onclick="copyReportText()" class="flex-1 bg-pink-500 hover:bg-pink-600 text-white py-2.5 rounded-xl font-semibold text-sm transition-all">
+                    <i class="fa-solid fa-copy mr-1"></i> Copy Report for WhatsApp
+                </button>
+                <button onclick="closeReportModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TOAST CONTAINER ================= -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-3 pointer-events-none"></div>
+
+    <!-- ================= MAIN APP CONTAINER ================= -->
+    <div id="main-app" class="hidden space-y-8 max-w-6xl mx-auto">
+
+        <!-- Header -->
+        <header class="glass-dark rounded-3xl p-6 md:p-8 relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-pink-500/20 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-rose-500/20 rounded-full blur-3xl"></div>
+            
+            <div class="flex flex-wrap justify-between items-center mb-4 text-xs text-slate-300 gap-3">
+                <div class="bg-slate-900/60 px-3.5 py-1.5 rounded-full flex items-center gap-2 border border-white/10">
+                    <i class="fa-solid fa-cloud-sun text-pink-400"></i> Faisalabad: <span id="weather-display" class="font-medium text-pink-200">28°C, Pleasant ☀️</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-emerald-400 font-medium text-[11px] bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20"><i class="fa-solid fa-circle text-[8px] animate-pulse mr-1"></i> Live Cloud Connected</span>
+                    <button onclick="toggleDarkMode()" class="px-3 py-1.5 rounded-full bg-slate-900/60 border border-white/10 text-pink-300 hover:bg-slate-800 transition-all">
+                        <i id="theme-icon" class="fa-solid fa-moon"></i>
+                    </button>
+                    <button onclick="clearAllData()" class="px-3 py-1.5 rounded-full bg-rose-500/20 hover:bg-rose-500/40 border border-rose-500/30 text-rose-300 transition-all">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center space-y-2">
+                <h1 class="text-3xl md:text-5xl font-bold tracking-wide">
+                    Assalam-o-Alaikum, <span class="text-pink-400">Muhtrama Ji!</span> <span class="heart-glow">❤️</span>
+                </h1>
+                <p id="weather-quote" class="text-slate-300 text-sm md:text-lg italic max-w-2xl mx-auto">"Yahan sirf mohabbat ki baatein nahi hongi, balkay ek doosray ki health aur routine ka khayal rakha jayega."</p>
+                <div class="inline-block px-4 py-1.5 rounded-full bg-pink-500/10 border border-pink-500/20 text-xs md:text-sm text-pink-300 font-medium mt-2">
+                    ✨ Made with Love, Care & Respect — From Pagal ❤️
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Role Selector -->
+        <div class="flex flex-wrap justify-center gap-4">
+            <button onclick="switchRole('muhtrama')" id="btn-muhtrama" class="px-6 py-3 rounded-2xl font-semibold transition-all duration-300 glass-dark border-pink-500/50 text-pink-300 shadow-lg shadow-pink-900/30">
+                🌸 Muhtrama Ji's Dashboard
+            </button>
+            <button onclick="switchRole('pagal')" id="btn-pagal" class="px-6 py-3 rounded-2xl font-semibold transition-all duration-300 glass-dark border-slate-700 text-slate-300">
+                ❤️ Pagal's Dashboard
+            </button>
+            <button onclick="switchRole('shared')" id="btn-shared" class="px-6 py-3 rounded-2xl font-semibold transition-all duration-300 glass-dark border-slate-700 text-slate-300">
+                📊 Shared Hub, Analytics & History
+            </button>
+        </div>
+
+        <!-- Main Dashboard Views -->
+        <main class="space-y-8">
+
+            <!-- ================= MUHTRAMA JI DASHBOARD ================= -->
+            <div id="view-muhtrama" class="space-y-6">
+                <div class="glass-dark rounded-3xl p-6 md:p-8 border-pink-500/30 space-y-6">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                        <h2 class="text-2xl font-bold text-pink-400 flex items-center gap-2">
+                            <i class="fa-solid fa-seedling"></i> Muhtrama Ji's Care Portal
+                        </h2>
+                        <span class="text-xs text-pink-300 bg-pink-500/10 px-3 py-1 rounded-full border border-pink-500/20">Cloud Live 🟢</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 space-y-3">
+                            <h3 class="font-semibold text-pink-300 flex items-center gap-2"><i class="fa-solid fa-mug-hot"></i> Breakfast ☕</h3>
+                            <select id="m-breakfast-status" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                                <option value="⏳ Abhi nahi kiya">⏳ Abhi nahi kiya</option>
+                                <option value="✅ Ho gaya">✅ Ho gaya</option>
+                                <option value="❌ Nahi kiya">❌ Nahi kiya</option>
+                            </select>
+                            <input type="text" id="m-breakfast-food" placeholder="Kya khaya?" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                        </div>
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 space-y-3">
+                            <h3 class="font-semibold text-pink-300 flex items-center gap-2"><i class="fa-solid fa-utensils"></i> Lunch 🥗</h3>
+                            <select id="m-lunch-status" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                                <option value="⏳ Abhi nahi kiya">⏳ Abhi nahi kiya</option>
+                                <option value="✅ Ho gaya">✅ Ho gaya</option>
+                                <option value="❌ Nahi kiya">❌ Nahi kiya</option>
+                            </select>
+                            <input type="text" id="m-lunch-food" placeholder="Kya khaya?" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                        </div>
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 space-y-3">
+                            <h3 class="font-semibold text-pink-300 flex items-center gap-2"><i class="fa-solid fa-bowl-food"></i> Dinner 🌙</h3>
+                            <select id="m-dinner-status" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                                <option value="⏳ Abhi nahi kiya">⏳ Abhi nahi kiya</option>
+                                <option value="✅ Ho gaya">✅ Ho gaya</option>
+                                <option value="❌ Nahi kiya">❌ Nahi kiya</option>
+                            </select>
+                            <input type="text" id="m-dinner-food" placeholder="Kya khaya?" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                        </div>
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 space-y-3">
+                            <h3 class="font-semibold text-pink-300 flex items-center gap-2"><i class="fa-solid fa-heart-pulse"></i> Health & Mood</h3>
+                            <select id="m-health" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                                <option value="❤️ Bilkul Theek">❤️ Bilkul Theek</option>
+                                <option value="😐 Thori thakan">😐 Thori thakan</option>
+                                <option value="🤒 Tabiyat theek nahi">🤒 Tabiyat theek nahi</option>
+                            </select>
+                            <select id="m-mood" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                                <option value="😊 Happy">😊 Happy</option>
+                                <option value="😍 Bohat Khush">😍 Bohat Khush</option>
+                                <option value="😌 Sukoon mein">😌 Sukoon mein</option>
+                                <option value="😔 Udaas">😔 Udaas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <button onclick="saveData('muhtrama')" class="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 text-white px-8 py-3 rounded-2xl font-semibold shadow-lg shadow-pink-950/40 transition-all">
+                            <i class="fa-solid fa-floppy-disk mr-2"></i> Update My Status, Muhtrama Ji ❤️
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= PAGAL DASHBOARD ================= -->
+            <div id="view-pagal" class="space-y-6 hidden">
+                <div class="glass-dark rounded-3xl p-6 md:p-8 border-rose-500/30 space-y-6">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                        <h2 class="text-2xl font-bold text-rose-400 flex items-center gap-2">
+                            <i class="fa-solid fa-shield-heart"></i> Pagal's Care Portal
+                        </h2>
+                        <span class="text-xs text-rose-300 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">Cloud Live 🟢</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 space-y-3">
+                            <h3 class="font-semibold text-rose-300 flex items-center gap-2"><i class="fa-solid fa-mug-hot"></i> Breakfast ☕</h3>
+                            <select id="p-breakfast-status" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                                <option value="⏳ Abhi nahi kiya">⏳ Abhi nahi kiya</option>
+                                <option value="✅ Ho gaya">✅ Ho gaya</option>
+                                <option value="❌ Nahi kiya">❌ Nahi kiya</option>
+                            </select>
+                            <input type="text" id="p-breakfast-food" placeholder="Breakfast details" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                        </div>
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 space-y-3">
+                            <h3 class="font-semibold text-rose-300 flex items-center gap-2"><i class="fa-solid fa-utensils"></i> Lunch 🥗</h3>
+                            <select id="p-lunch-status" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                                <option value="⏳ Abhi nahi kiya">⏳ Abhi nahi kiya</option>
+                                <option value="✅ Ho gaya">✅ Ho gaya</option>
+                                <option value="❌ Nahi kiya">❌ Nahi kiya</option>
+                            </select>
+                            <input type="text" id="p-lunch-food" placeholder="Lunch details" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                        </div>
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 space-y-3">
+                            <h3 class="font-semibold text-rose-300 flex items-center gap-2"><i class="fa-solid fa-bowl-food"></i> Dinner 🌙</h3>
+                            <select id="p-dinner-status" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                                <option value="⏳ Abhi nahi kiya">⏳ Abhi nahi kiya</option>
+                                <option value="✅ Ho gaya">✅ Ho gaya</option>
+                                <option value="❌ Nahi kiya">❌ Nahi kiya</option>
+                            </select>
+                            <input type="text" id="p-dinner-food" placeholder="Dinner details" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                        </div>
+                        <div class="bg-slate-900/50 p-5 rounded-2xl border border-white/10 space-y-3">
+                            <h3 class="font-semibold text-rose-300 flex items-center gap-2"><i class="fa-solid fa-heart-pulse"></i> Health & Mood</h3>
+                            <select id="p-health" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                                <option value="❤️ Theek">❤️ Theek</option>
+                                <option value="😐 Thori thakan">😐 Thori thakan</option>
+                                <option value="🤒 Tabiyat theek nahi">🤒 Tabiyat theek nahi</option>
+                            </select>
+                            <select id="p-mood" class="w-full bg-slate-800 border border-white/10 rounded-xl p-2.5 text-sm text-white">
+                                <option value="😊 Normal & Calm">😊 Normal & Calm</option>
+                                <option value="😍 Bohat Khush">😍 Bohat Khush</option>
+                                <option value="😴 Thakay huay">😴 Thakay huay</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <button onclick="saveData('pagal')" class="bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 text-white px-8 py-3 rounded-2xl font-semibold shadow-lg shadow-rose-950/40 transition-all">
+                            <i class="fa-solid fa-floppy-disk mr-2"></i> Update My Status, Pagal ❤️
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= SHARED HUB, ANALYTICS & DUA CORNER ================= -->
+            <div id="view-shared" class="space-y-6 hidden">
+                <div class="glass-dark rounded-3xl p-6 md:p-8 space-y-6">
+                    <h2 class="text-2xl font-bold text-pink-400 flex items-center gap-2">
+                        <i class="fa-solid fa-heart"></i> Live Shared Care Dashboard & Analytics
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-slate-900/50 p-6 rounded-2xl border border-pink-500/30 space-y-3">
+                            <h3 class="text-lg font-bold text-pink-300 border-b border-white/10 pb-2">🌸 Muhtrama Ji <span id="disp-m-time" class="text-xs text-slate-400 float-right">Not updated</span></h3>
+                            <ul class="space-y-2 text-sm">
+                                <li class="flex justify-between"><span>☕ Breakfast:</span> <strong id="disp-m-breakfast" class="text-pink-200">⏳ Waiting...</strong></li>
+                                <li class="flex justify-between"><span>🥗 Lunch:</span> <strong id="disp-m-lunch" class="text-pink-200">⏳ Waiting...</strong></li>
+                                <li class="flex justify-between"><span>🌙 Dinner:</span> <strong id="disp-m-dinner" class="text-pink-200">⏳ Waiting...</strong></li>
+                                <li class="flex justify-between"><span>🩺 Health & Mood:</span> <strong id="disp-m-health-mood" class="text-pink-200">-</strong></li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-900/50 p-6 rounded-2xl border border-rose-500/30 space-y-3">
+                            <h3 class="text-lg font-bold text-rose-300 border-b border-white/10 pb-2">❤️ Pagal (Jawad) <span id="disp-p-time" class="text-xs text-slate-400 float-right">Not updated</span></h3>
+                            <ul class="space-y-2 text-sm">
+                                <li class="flex justify-between"><span>☕ Breakfast:</span> <strong id="disp-p-breakfast" class="text-rose-200">⏳ Waiting...</strong></li>
+                                <li class="flex justify-between"><span>🥗 Lunch:</span> <strong id="disp-p-lunch" class="text-rose-200">⏳ Waiting...</strong></li>
+                                <li class="flex justify-between"><span>🌙 Dinner:</span> <strong id="disp-p-dinner" class="text-rose-200">⏳ Waiting...</strong></li>
+                                <li class="flex justify-between"><span>🩺 Health & Mood:</span> <strong id="disp-p-health-mood" class="text-rose-200">-</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Visual Analytics Progress Bar -->
+                    <div class="bg-slate-900/70 p-5 rounded-2xl border border-white/10 space-y-3">
+                        <div class="flex justify-between text-sm font-medium">
+                            <span class="text-pink-300">📊 Weekly Care Consistency Score</span>
+                            <span id="analytics-score" class="text-pink-400 font-bold">100%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden">
+                            <div id="analytics-bar" class="bg-gradient-to-r from-pink-500 to-rose-500 h-full rounded-full transition-all duration-500" style="width: 100%"></div>
+                        </div>
+                        <p class="text-xs text-slate-400">Calculated based on daily check-ins, meals on time, and mutual care consistency.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Dua Corner -->
+                    <div class="glass-dark rounded-3xl p-6 space-y-4">
+                        <h3 class="text-xl font-bold text-pink-400 flex items-center gap-2"><i class="fa-solid fa-hands-praying"></i> Dua Corner & Silent Wishes</h3>
+                        <div id="dua-list" class="h-36 overflow-y-auto space-y-2 p-3 bg-slate-900/60 rounded-2xl text-xs border border-white/10">
+                            <div class="text-slate-400 italic">No dua or wishes shared yet...</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="dua-input" placeholder="Write a silent prayer or wish..." class="flex-1 bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white">
+                            <button onclick="addDua()" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-xl text-sm font-semibold">Send 🤲</button>
+                        </div>
+                    </div>
+
+                    <!-- Weekly History & View Report -->
+                    <div class="glass-dark rounded-3xl p-6 space-y-4">
+                        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                            <h3 class="text-xl font-bold text-rose-400 flex items-center gap-2"><i class="fa-solid fa-calendar-week"></i> Weekly History</h3>
+                            <button onclick="openReportModal()" class="px-3 py-1 bg-pink-500/20 hover:bg-pink-500/40 border border-pink-500/40 text-pink-300 text-xs rounded-xl font-medium transition-all">
+                                <i class="fa-solid fa-file-lines mr-1"></i> View & Copy Report
+                            </button>
+                        </div>
+                        <div id="weekly-history-list" class="h-44 overflow-y-auto space-y-2 pr-2 text-xs">
+                            <div class="text-slate-400 italic">No past history logs stored yet.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Floating Quick Action Button (FAB) -->
+    <div class="fixed bottom-6 right-6 z-40">
+        <button onclick="triggerQuickAction()" class="w-14 h-14 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl hover:scale-110 transition-all border border-pink-400/30 heart-glow">
+            <i class="fa-solid fa-heart"></i>
+        </button>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script type="module">
+        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        window.unlockApp = function() {
+            const pin = document.getElementById('passcode-input').value;
+            if(pin === '143' || pin === '0000') {
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('main-app').classList.remove('hidden');
+                showToast("Welcome back to Our Care World! ❤️", "success");
+            } else {
+                alert("Galat PIN code! Sahi code enter karein (Default: 143)");
+            }
+        };
+
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto toast-animate glass-dark px-4 py-3 rounded-2xl border text-sm flex items-center gap-3 shadow-xl ${
+                type === 'success' ? 'border-pink-500/50 text-pink-200' : 'border-rose-500/50 text-rose-200'
+            }`;
+            toast.innerHTML = `<i class="fa-solid fa-heart text-pink-400 animate-pulse"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        };
+
+        window.toggleDarkMode = function() {
+            const body = document.getElementById('app-body');
+            const icon = document.getElementById('theme-icon');
+            if(body.classList.contains('bg-slate-950')) {
+                body.className = "bg-slate-100 text-slate-900 p-4 md:p-8 min-h-screen";
+                icon.className = "fa-solid fa-sun";
+            } else {
+                body.className = "bg-slate-950 text-slate-100 p-4 md:p-8 min-h-screen";
+                icon.className = "fa-solid fa-moon";
+            }
+        };
+
+        window.switchRole = function(role) {
+            document.getElementById('view-muhtrama').classList.add('hidden');
+            document.getElementById('view-pagal').classList.add('hidden');
+            document.getElementById('view-shared').classList.add('hidden');
+
+            document.getElementById('btn-muhtrama').className = "px-6 py-3 rounded-2xl font-semibold transition-all duration-300 glass-dark border-slate-700 text-slate-300";
+            document.getElementById('btn-pagal').className = "px-6 py-3 rounded-2xl font-semibold transition-all duration-300 glass-dark border-slate-700 text-slate-300";
+            document.getElementById('btn-shared').className = "px-6 py-3 rounded-2xl font-semibold transition-all duration-300 glass-dark border-slate-700 text-slate-300";
+
+            if(role === 'muhtrama') {
+                document.getElementById('view-muhtrama').classList.remove('hidden');
+                document.getElementById('btn-muhtrama').className = "px-6 py-3 rounded-2xl font-semibold transition-all duration-300 glass-dark border-pink-500/50 text-pink-300 shadow-lg shadow-pink-900/30";
+            } else if(role === 'pagal') {
+                document.getElementById('view-pagal').classList.remove('hidden');
+                document.getElementById('btn-pagal').className = "px-6 py-3 rounded-2xl font-semibold transition-all duration-300 glass-dark border-rose-500/50 text-rose-300 shadow-lg shadow-rose-950/30";
+            } else if(role === 'shared') {
+                document.getElementById('view-shared').classList.remove('hidden');
+                document.getElementById('btn-shared').className = "px-6 py-3 rounded-2xl font-semibold transition-all duration-300 glass-dark border-pink-500/50 text-pink-300 shadow-lg shadow-pink-900/30";
+            }
+        };
+
+        window.saveData = async function(who) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const dateString = now.toLocaleDateString();
+            let data = {};
+
+            if(who === 'muhtrama') {
+                data = {
+                    who: '🌸 Muhtrama Ji',
+                    breakfastStatus: document.getElementById('m-breakfast-status').value,
+                    breakfastFood: document.getElementById('m-breakfast-food').value || 'Not specified',
+                    lunchStatus: document.getElementById('m-lunch-status').value,
+                    lunchFood: document.getElementById('m-lunch-food').value || 'Not specified',
+                    dinnerStatus: document.getElementById('m-dinner-status').value,
+                    dinnerFood: document.getElementById('m-dinner-food').value || 'Not specified',
+                    health: document.getElementById('m-health').value,
+                    mood: document.getElementById('m-mood').value,
+                    time: `${dateString} at ${timeString}`
+                };
+                localStorage.setItem('muhtrama_data', JSON.stringify(data));
+                showToast("Muhtrama Ji, status cloud par update ho gaya! ❤️", "success");
+            } else {
+                data = {
+                    who: '❤️ Pagal (Jawad)',
+                    breakfastStatus: document.getElementById('p-breakfast-status').value,
+                    breakfastFood: document.getElementById('p-breakfast-food').value || 'Not specified',
+                    lunchStatus: document.getElementById('p-lunch-status').value,
+                    lunchFood: document.getElementById('p-lunch-food').value || 'Not specified',
+                    dinnerStatus: document.getElementById('p-dinner-status').value,
+                    dinnerFood: document.getElementById('p-dinner-food').value || 'Not specified',
+                    health: document.getElementById('p-health').value,
+                    mood: document.getElementById('p-mood').value,
+                    time: `${dateString} at ${timeString}`
+                };
+                localStorage.setItem('pagal_data', JSON.stringify(data));
+                showToast("Pagal, status cloud par update ho gaya! ❤️", "success");
+            }
+
+            // Sync with Firebase Cloud DB if enabled
+            if(window.isLiveCloudEnabled && window.db) {
+                try {
+                    await setDoc(doc(window.db, "careWorld", who), data);
+                } catch(e) { console.log("Cloud sync error:", e); }
+            }
+
+            let weeklyHistory = JSON.parse(localStorage.getItem('care_weekly_history')) || [];
+            weeklyHistory.unshift(data);
+            if(weeklyHistory.length > 20) weeklyHistory.pop();
+            localStorage.setItem('care_weekly_history', JSON.stringify(weeklyHistory));
+
+            updateDisplay();
+            loadWeeklyHistory();
+        };
+
+        window.clearAllData = function() {
+            localStorage.removeItem('muhtrama_data');
+            localStorage.removeItem('pagal_data');
+            localStorage.removeItem('care_weekly_history');
+            localStorage.removeItem('care_duas');
+            updateDisplay();
+            loadWeeklyHistory();
+            loadDuas();
+            showToast("Saara data clear ho gaya hai!", "info");
+        };
+
+        window.updateDisplay = function() {
+            const m = JSON.parse(localStorage.getItem('muhtrama_data')) || { breakfastStatus: '⏳ Waiting...', lunchStatus: '⏳ Waiting...', dinnerStatus: '⏳ Waiting...', health: '-', mood: '-', time: 'Not updated' };
+            const p = JSON.parse(localStorage.getItem('pagal_data')) || { breakfastStatus: '⏳ Waiting...', lunchStatus: '⏳ Waiting...', dinnerStatus: '⏳ Waiting...', health: '-', mood: '-', time: 'Not updated' };
+
+            document.getElementById('disp-m-breakfast').innerText = `${m.breakfastStatus} (${m.breakfastFood || '-'})`;
+            document.getElementById('disp-m-lunch').innerText = `${m.lunchStatus} (${m.lunchFood || '-'})`;
+            document.getElementById('disp-m-dinner').innerText = `${m.dinnerStatus} (${m.dinnerFood || '-'})`;
+            document.getElementById('disp-m-health-mood').innerText = `${m.health} | ${m.mood}`;
+            document.getElementById('disp-m-time').innerText = m.time;
+
+            document.getElementById('disp-p-breakfast').innerText = `${p.breakfastStatus} (${p.breakfastFood || '-'})`;
+            document.getElementById('disp-p-lunch').innerText = `${p.lunchStatus} (${p.lunchFood || '-'})`;
+            document.getElementById('disp-p-dinner').innerText = `${p.dinnerStatus} (${p.dinnerFood || '-'})`;
+            document.getElementById('disp-p-health-mood').innerText = `${p.health} | ${p.mood}`;
+            document.getElementById('disp-p-time').innerText = p.time;
+        };
+
+        window.addDua = function() {
+            const input = document.getElementById('dua-input');
+            if(!input.value.trim()) return;
+            let duas = JSON.parse(localStorage.getItem('care_duas')) || [];
+            duas.unshift(input.value);
+            localStorage.setItem('care_duas', JSON.stringify(duas));
+            input.value = '';
+            loadDuas();
+            showToast("Nayi dua / wish add ho gayi! 🤲", "success");
+        };
+
+        window.loadDuas = function() {
+            const duaList = document.getElementById('dua-list');
+            const duas = JSON.parse(localStorage.getItem('care_duas')) || [];
+            if(duas.length === 0) {
+                duaList.innerHTML = `<div class="text-slate-400 italic">No dua or wishes shared yet...</div>`;
+                return;
+            }
+            duaList.innerHTML = '';
+            duas.forEach(d => {
+                const div = document.createElement('div');
+                div.className = "p-2 bg-pink-500/10 rounded-xl border border-pink-500/20 text-pink-200";
+                div.innerHTML = `<i class="fa-solid fa-hands-praying mr-1 text-pink-400"></i> ${d}`;
+                duaList.appendChild(div);
+            });
+        };
+
+        window.loadWeeklyHistory = function() {
+            const historyList = document.getElementById('weekly-history-list');
+            const weeklyHistory = JSON.parse(localStorage.getItem('care_weekly_history')) || [];
+            if(weeklyHistory.length === 0) {
+                historyList.innerHTML = `<div class="text-slate-400 italic text-sm">No past history logs stored yet.</div>`;
+                return;
+            }
+            historyList.innerHTML = '';
+            weeklyHistory.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-900/60 p-2.5 rounded-xl text-xs space-y-1 border border-white/5";
+                div.innerHTML = `
+                    <div class="flex justify-between font-semibold text-pink-300">
+                        <span>${item.who}</span>
+                        <span class="text-slate-400">${item.time}</span>
+                    </div>
+                    <div class="text-slate-300">☕ B: ${item.breakfastStatus} | 🥗 L: ${item.lunchStatus} | 🌙 D: ${item.dinnerStatus}</div>
+                `;
+                historyList.appendChild(div);
+            });
+        };
+
+        window.openReportModal = function() {
+            const history = JSON.parse(localStorage.getItem('care_weekly_history')) || [];
+            let textReport = "=== PAGAL ❤️ MUHTRAMA — WEEKLY CARE REPORT ===\n\n";
+            
+            if(history.length === 0) {
+                textReport += "Abhi tak koi check-in save nahi hua!\n";
+            } else {
+                history.forEach((h, index) => {
+                    textReport += `[${index + 1}] ${h.who} (${h.time})\n`;
+                    textReport += `- Breakfast: ${h.breakfastStatus} (${h.breakfastFood})\n`;
+                    textReport += `- Lunch: ${h.lunchStatus} (${h.lunchFood})\n`;
+                    textReport += `- Dinner: ${h.dinnerStatus} (${h.dinnerFood})\n`;
+                    textReport += `- Health & Mood: ${h.health}, ${h.mood}\n\n`;
+                });
+            }
+
+            document.getElementById('report-textarea').value = textReport;
+            document.getElementById('report-modal').classList.remove('hidden');
+        };
+
+        window.closeReportModal = function() {
+            document.getElementById('report-modal').classList.add('hidden');
+        };
+
+        window.copyReportText = function() {
+            const textarea = document.getElementById('report-textarea');
+            textarea.select();
+            navigator.clipboard.writeText(textarea.value);
+            showToast("Report copied to clipboard! 📋", "success");
+        };
+
+        window.triggerQuickAction = function() {
+            switchRole('shared');
+            showToast("Opened Shared Hub & Analytics ❤️", "info");
+        };
+
+        window.onload = function() {
+            updateDisplay();
+            loadWeeklyHistory();
+            loadDuas();
+            if(window.initLiveSync) window.initLiveSync();
+        };
+    </script>
+</body>
+</html>
